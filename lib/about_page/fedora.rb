@@ -35,7 +35,7 @@ module AboutPage
     end
 
     def ping
-      fedora.get("/rest").response.status
+      fedora.get("/").response.status
     rescue
       nil
     end
