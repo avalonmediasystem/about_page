@@ -17,18 +17,18 @@ module AboutPage
     end
 
     def fedora_info
-      resp = fedora.get("/").response.body
-      doc = Nokogiri::XML resp
+#      resp = fedora.get("/").response.body
+#      doc = Nokogiri::XML resp
 
-      release = doc.css("span#version").text
-      build = doc.css("span#build").text
-      timestamp = doc.css("span#timestamp").text
+#      release = doc.css("span#version").text
+#      build = doc.css("span#build").text
+#      timestamp = doc.css("span#timestamp").text
 
       h = {}
       h["Fedora location"] = fedora_url
-      h["Release"] = release unless release.nil?
-      h["Build"] = build unless release.nil?
-      h["Timestamp"] = timestamp unless release.nil?
+#      h["Release"] = release unless release.nil?
+#      h["Build"] = build unless release.nil?
+#      h["Timestamp"] = timestamp unless release.nil?
       h
     rescue
       {}
