@@ -17,7 +17,7 @@ module AboutPage
         format.html { render :status => @configuration.valid? ? 200 : 417 } # about_page.html.erb
         format.json { render :json   => @configuration.to_json }
         format.xml  { render :xml    => @configuration.to_xml  }
-        format.yaml { render :text   => @configuration.to_yaml, :content_type => 'text/yaml' }
+        format.yaml { render :body   => @configuration.to_yaml, :content_type => 'text/yaml' }
       end
     end
 
@@ -27,7 +27,7 @@ module AboutPage
         format.html { render }
         format.json { render :json => @states }
         format.xml  { render :xml  => @states }
-        format.yaml { render :text => @states.to_yaml, :content_type => 'text/yaml' }
+        format.yaml { render :body => @states.to_yaml, :content_type => 'text/yaml' }
       end
     end
   end
