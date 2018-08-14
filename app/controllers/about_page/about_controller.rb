@@ -1,7 +1,7 @@
 module AboutPage
   class AboutController < ApplicationController
-    before_filter :load_and_filter_configuration
-    before_filter :only => :index do
+    before_action :load_and_filter_configuration
+    before_action :only => :index do
       AboutPage.configuration.preflight(request)
     end
 
