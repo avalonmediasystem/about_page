@@ -5,8 +5,8 @@ describe "the health page", :type => :feature do
     module AboutPage
       class HealthTest < AboutPage::Configuration::Node
         attr_reader :healthy
-        validates_each :healthy do |r,a,v|
-          r.errors.add a, ": should be healthy" unless v
+        validates_each :healthy do |r, a, v|
+          r.errors.add(a, message: ': should be healthy') unless v
         end
         def initialize(state)
           @healthy = state
