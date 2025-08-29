@@ -25,7 +25,9 @@ module AboutPage
   end
 
   class Configuration
+    require 'timeout'
     attr_accessor :hash
+
     delegate :to_xml, :to_json, :to_yaml, :to => :to_h
     delegate :each, :map, :to => :to_h
 
@@ -66,15 +68,29 @@ module AboutPage
     end
 
     def health_report
-      self.nodes.collect do |key, profile| 
-        if profile.class.validators.length > 0 
-          health = profile.valid? ? 'ok' : 'error'
-          errors = profile.errors.messages.map { |a, m| "#{a} #{m.join(', ')}" }
-          { 'component' => key.to_s, 'status' => health, 'errors' => errors }
-        else
-          nil
+      self.nodes.collect do |key, profile|
+        next unless profile.class.validators.length.positive?
+
+        begin
+          health = Timeout.timeout(55) { profile.valid? ? 'ok' : 'error' }
+          errors = error_message(profile)
+        rescue Timeout::Error
+          health = 'error'
+          # ActiveModel::Errors.add expects the first argument to be the name
+          # of the method that generated the error. We do not have access to the
+          # name of the validator that timed out in this context, so define a
+          # dummy `timeout` method to reference when adding the error to the model.
+          profile.class.define_method(:timeout) {}
+          profile.errors.add(:timeout, message: ': component check has timed out.')
+          errors = error_message(profile)
         end
+
+        { 'component' => key.to_s, 'status' => health, 'errors' => errors }
       end.compact
+    end
+
+    def error_message(profile)
+      profile.errors.messages.map { |a, m| "#{a} #{m.join(', ')}" }
     end
 
     class Node
