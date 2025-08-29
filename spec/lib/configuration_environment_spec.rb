@@ -8,6 +8,6 @@ describe "AboutPage::Environment" do
 
   end
   it "should" do
-    AboutPage::Environment.new.should be_a_kind_of(AboutPage::Environment)
+    expect(AboutPage::Environment.new).to be_a_kind_of(AboutPage::Environment)
   end
 end

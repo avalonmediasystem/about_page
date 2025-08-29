@@ -13,4 +13,5 @@
 //= require jquery
 //= require jquery_ujs
 //= link application.css
+//= link_directory ../javascripts .js
 //= require_tree .
