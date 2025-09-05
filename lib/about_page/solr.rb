@@ -1,6 +1,6 @@
 module AboutPage
   class Solr < AboutPage::Configuration::Node
-    attr_accessor :rsolr, :options
+    attr_accessor :rsolr, :options, :timeout
 
     validates_each :ping do |record, attr, value|
       record.errors.add(attr, message: ": unable to ping Solr at #{record.rsolr.uri}") unless value == 'OK'
@@ -22,6 +22,7 @@ module AboutPage
       self.options[:expects][:numDocs] ||= 1
 
       @request_expectations = {}
+      @timeout = options[:timeout]
     end
 
     def ping

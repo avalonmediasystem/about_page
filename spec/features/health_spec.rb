@@ -8,8 +8,9 @@ describe "the health page", :type => :feature do
         validates_each :healthy do |r, a, v|
           r.errors.add(a, message: ': should be healthy') unless v
         end
-        def initialize(state)
+        def initialize(state, options = {})
           @healthy = state
+          @timeout = options[:timeout]
         end
       end
     end
@@ -72,7 +73,7 @@ describe "the health page", :type => :feature do
 
       describe 'timeout' do
         before do
-          timeout = AboutPage::HealthTest.new(false)
+          timeout = AboutPage::HealthTest.new(false, timeout: 5)
           allow(timeout).to receive(:valid?).and_raise(Timeout::Error)
           AboutPage.configuration[:timeout] = timeout
           visit('/about/health')
@@ -89,7 +90,7 @@ describe "the health page", :type => :feature do
 
         it 'should contain an error list' do
           expect(@context).to have_xpath('ul/li[@class="component-error"]')
-          expect(@context).to have_content('timeout : component check has timed out')
+          expect(@context).to have_content('timeout : component check took too long. Timed out after 5 seconds.')
         end
       end
     end

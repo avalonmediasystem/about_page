@@ -1,6 +1,6 @@
 module AboutPage
   class Fedora < AboutPage::Configuration::Node
-    attr_accessor :fedora, :fedora_url
+    attr_accessor :fedora, :fedora_url, :timeout
 
     render_with 'generic_hash'
 
@@ -8,9 +8,10 @@ module AboutPage
       record.errors.add(attr, message: ": unable to reach Fedora at #{record.fedora_url}") unless value == 200
     end
 
-    def initialize(fedora_instance)
+    def initialize(fedora_instance, options = {})
       self.fedora = fedora_instance
       self.fedora_url = fedora.http.url_prefix.to_s
+      @timeout = options[:timeout]
     end
 
     def fedora_info

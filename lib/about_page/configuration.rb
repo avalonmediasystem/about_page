@@ -72,16 +72,14 @@ module AboutPage
         next unless profile.class.validators.length.positive?
 
         begin
-          health = Timeout.timeout(55) { profile.valid? ? 'ok' : 'error' }
+          profile.create_method(:timeout) do
+            @timeout || 20
+          end
+          health = Timeout.timeout(profile.timeout) { profile.valid? ? 'ok' : 'error' }
           errors = error_message(profile)
         rescue Timeout::Error
           health = 'error'
-          # ActiveModel::Errors.add expects the first argument to be the name
-          # of the method that generated the error. We do not have access to the
-          # name of the validator that timed out in this context, so define a
-          # dummy `timeout` method to reference when adding the error to the model.
-          profile.class.define_method(:timeout) {}
-          profile.errors.add(:timeout, message: ': component check has timed out.')
+          profile.errors.add(:timeout, message: ": component check took too long. Timed out after #{profile.timeout} seconds.")
           errors = error_message(profile)
         end
 
@@ -129,6 +127,10 @@ module AboutPage
       def add_header response, text
         response.headers['X-AboutPage-Warning'] ||= ""
         response.headers['X-AboutPage-Warning'] += "#{self.class.name}: #{text};"
+      end
+
+      def create_method(name, &block)
+        self.class.send(:define_method, name, &block)
       end
 
       protected
