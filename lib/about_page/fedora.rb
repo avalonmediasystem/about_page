@@ -1,6 +1,6 @@
 module AboutPage
   class Fedora < AboutPage::Configuration::Node
-    attr_accessor :fedora, :fedora_url, :timeout
+    attr_accessor :fedora, :fedora_url
 
     render_with 'generic_hash'
 

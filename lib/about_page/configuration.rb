@@ -72,14 +72,12 @@ module AboutPage
         next unless profile.class.validators.length.positive?
 
         begin
-          profile.create_method(:timeout) do
-            @timeout || 20
-          end
-          health = Timeout.timeout(profile.timeout) { profile.valid? ? 'ok' : 'error' }
+          timeout = profile.timeout || 20
+          health = Timeout.timeout(timeout) { profile.valid? ? 'ok' : 'error' }
           errors = error_message(profile)
         rescue Timeout::Error
           health = 'error'
-          profile.errors.add(:timeout, message: ": component check took too long. Timed out after #{profile.timeout} seconds.")
+          profile.errors.add(:timeout, message: ": component check took too long. Timed out after #{timeout} seconds.")
           errors = error_message(profile)
         end
 
@@ -94,6 +92,7 @@ module AboutPage
     class Node
       include ActiveModel::Validations
       delegate :each_pair, :to_xml, :to_json, :to_yaml, :to => :to_h
+      attr_accessor :timeout
 
       class << self
         attr_reader :partial
@@ -127,10 +126,6 @@ module AboutPage
       def add_header response, text
         response.headers['X-AboutPage-Warning'] ||= ""
         response.headers['X-AboutPage-Warning'] += "#{self.class.name}: #{text};"
-      end
-
-      def create_method(name, &block)
-        self.class.send(:define_method, name, &block)
       end
 
       protected
