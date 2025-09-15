@@ -5,11 +5,12 @@ describe "the health page", :type => :feature do
     module AboutPage
       class HealthTest < AboutPage::Configuration::Node
         attr_reader :healthy
-        validates_each :healthy do |r,a,v|
-          r.errors.add a, ": should be healthy" unless v
+        validates_each :healthy do |r, a, v|
+          r.errors.add(a, message: ': should be healthy') unless v
         end
-        def initialize(state)
+        def initialize(state, options = {})
           @healthy = state
+          @timeout = options[:timeout]
         end
       end
     end
@@ -39,15 +40,15 @@ describe "the health page", :type => :feature do
         end
 
         it "should report the service name" do
-          @context.should have_content('yup')
+          expect(@context).to have_content('yup')
         end
 
         it "should contain an ok status" do
-          @context.should have_xpath('span[@class="label label-success"][text() = "ok"]')
+          expect(@context).to have_xpath('span[@class="label label-success"][text() = "ok"]')
         end
 
         it "should not contain an error list" do
-          @context.should_not have_xpath('ul/li[@class="component-error"]')
+          expect(@context).to_not have_xpath('ul/li[@class="component-error"]')
         end
       end
 
@@ -57,16 +58,39 @@ describe "the health page", :type => :feature do
         end
 
         it "should report the service name" do
-          @context.should have_content('nope')
+          expect(@context).to have_content('nope')
         end
 
         it "should contain an error status" do
-          @context.should have_xpath('span[@class="label label-important"][text() = "error"]')
+          expect(@context).to have_xpath('span[@class="label label-important"][text() = "error"]')
         end
 
         it "should contain an error list" do
-          @context.should have_xpath('ul/li[@class="component-error"]')
-          @context.should have_content('healthy : should be healthy')
+          expect(@context).to have_xpath('ul/li[@class="component-error"]')
+          expect(@context).to have_content('healthy : should be healthy')
+        end
+      end
+
+      describe 'timeout' do
+        before do
+          timeout = AboutPage::HealthTest.new(false, timeout: 5)
+          allow(timeout).to receive(:valid?).and_raise(Timeout::Error)
+          AboutPage.configuration[:timeout] = timeout
+          visit('/about/health')
+          @context = page.find('li[class=component][3]')
+        end
+
+        it 'should report the service name' do
+          expect(@context).to have_content('timeout')
+        end
+
+        it 'should contain an error status' do
+          expect(@context).to have_xpath('span[@class="label label-important"][text() = "error"]')
+        end
+
+        it 'should contain an error list' do
+          expect(@context).to have_xpath('ul/li[@class="component-error"]')
+          expect(@context).to have_content('timeout : component check took too long. Timed out after 5 seconds.')
         end
       end
     end

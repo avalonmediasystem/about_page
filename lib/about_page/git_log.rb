@@ -41,11 +41,11 @@ module AboutPage
         @repo.walk(@repo.head.name, Rugged::SORT_TOPO+Rugged::SORT_DATE) do |c|
           result << { :commit => c, :refs => refs[c.oid] }
           bail = case @limit
-          when Fixnum then result.length == @limit
-          when Regexp then result.last[:refs].any? { |ref| ref =~ @limit }
-          when Time   then c.committer[:time] < @limit
-          when Proc   then @limit.call(c)
-          end
+                 when Integer then result.length == @limit
+                 when Regexp then result.last[:refs].any? { |ref| ref =~ @limit }
+                 when Time   then c.committer[:time] < @limit
+                 when Proc   then @limit.call(c)
+                 end
           break if bail
         end
       end

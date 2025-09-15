@@ -45,6 +45,8 @@ module Dummy
 
     # Version of your assets, change this if you want to expire all your assets
     config.assets.version = '1.0'
+
+    # Set timezone behavior to get rid of deprecation warning on modern versions of rails
+    config.active_support.to_time_preserves_timezone = :zone
   end
 end
-

@@ -1,7 +1,6 @@
 require 'ostruct'
 
 module AboutPage
-
   class OpenStructWithHashAccess < OpenStruct
     delegate :each, :map, :to => :to_h
     def to_json(options = {})
@@ -26,7 +25,9 @@ module AboutPage
   end
 
   class Configuration
+    require 'timeout'
     attr_accessor :hash
+
     delegate :to_xml, :to_json, :to_yaml, :to => :to_h
     delegate :each, :map, :to => :to_h
 
@@ -51,7 +52,7 @@ module AboutPage
     end
 
     def valid?
-       self.nodes.select { |key, profile| profile.respond_to? :ok? }.all? { |key, profile| profile.valid? }
+      self.nodes.select { |key, profile| profile.respond_to? :ok? }.all? { |key, profile| profile.valid? }
     end
 
     def nodes
@@ -63,24 +64,35 @@ module AboutPage
     end
 
     def to_h
-      self.hash.to_h.inject({}) { |h,v| h[v[0]] = v[1].respond_to?(:to_h) ? v[1].to_h : v[1]; h }
+      self.hash.to_h.inject({}) { |h, v| h[v[0]] = v[1].respond_to?(:to_h) ? v[1].to_h : v[1]; h }
     end
 
     def health_report
-      self.nodes.collect do |key, profile| 
-        if profile.class.validators.length > 0 
-          health = profile.valid? ? 'ok' : 'error'
-          errors = profile.errors.map {|a,m| "#{a} #{m}"}
-          { 'component' => key.to_s, 'status' => health, 'errors' => errors }
-        else
-          nil
+      self.nodes.collect do |key, profile|
+        next unless profile.class.validators.length.positive?
+
+        begin
+          timeout = profile.timeout || 20
+          health = Timeout.timeout(timeout) { profile.valid? ? 'ok' : 'error' }
+          errors = error_message(profile)
+        rescue Timeout::Error
+          health = 'error'
+          profile.errors.add(:timeout, message: ": component check took too long. Timed out after #{timeout} seconds.")
+          errors = error_message(profile)
         end
+
+        { 'component' => key.to_s, 'status' => health, 'errors' => errors }
       end.compact
+    end
+
+    def error_message(profile)
+      profile.errors.messages.map { |a, m| "#{a} #{m.join(', ')}" }
     end
 
     class Node
       include ActiveModel::Validations
       delegate :each_pair, :to_xml, :to_json, :to_yaml, :to => :to_h
+      attr_accessor :timeout
 
       class << self
         attr_reader :partial
@@ -91,10 +103,10 @@ module AboutPage
 
       def preflight request
         errors.clear
-        @request_expectations = request.params.select { |k,v| k =~ /^#{namespace}\./ }
+        @request_expectations = request.params.select { |k, v| k =~ /^#{namespace}\./ }
       end
 
-      def expects key 
+      def expects key
         @request_expectations["#{namespace}.#{key}"] || self.options[:expects][key] if @request_expectations
       end
 
@@ -112,11 +124,12 @@ module AboutPage
       end
 
       def add_header response, text
-        response.headers['X-AboutPage-Warning'] ||= "" 
+        response.headers['X-AboutPage-Warning'] ||= ""
         response.headers['X-AboutPage-Warning'] += "#{self.class.name}: #{text};"
       end
 
       protected
+
       def namespace
         self.class.name.split("::").last.downcase
       end

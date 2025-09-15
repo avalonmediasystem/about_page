@@ -1,41 +1,39 @@
 module AboutPage
   class Fedora < AboutPage::Configuration::Node
-
     attr_accessor :fedora, :fedora_url
 
     render_with 'generic_hash'
 
     validates_each :ping do |record, attr, value|
-      unless value == 200
-        record.errors.add attr, ": unable to reach Fedora at #{record.fedora_url}"
-      end
+      record.errors.add(attr, message: ": unable to reach Fedora at #{record.fedora_url}") unless value == 200
     end
 
-    def initialize(fedora_instance)
+    def initialize(fedora_instance, options = {})
       self.fedora = fedora_instance
       self.fedora_url = fedora.http.url_prefix.to_s
+      @timeout = options[:timeout]
     end
 
     def fedora_info
-#      resp = fedora.get("/").response.body
-#      doc = Nokogiri::XML resp
+      # resp = fedora.get("/").response.body
+      # doc = Nokogiri::XML resp
 
-#      release = doc.css("span#version").text
-#      build = doc.css("span#build").text
-#      timestamp = doc.css("span#timestamp").text
+      # release = doc.css("span#version").text
+      # build = doc.css("span#build").text
+      # timestamp = doc.css("span#timestamp").text
 
       h = {}
       h["Fedora location"] = fedora_url
-#      h["Release"] = release unless release.nil?
-#      h["Build"] = build unless release.nil?
-#      h["Timestamp"] = timestamp unless release.nil?
+      # h["Release"] = release unless release.nil?
+      # h["Build"] = build unless release.nil?
+      # h["Timestamp"] = timestamp unless release.nil?
       h
     rescue
       {}
     end
 
     def ping
-      fedora.http.get().status
+      fedora.http.get.status
     rescue
       nil
     end
@@ -43,6 +41,5 @@ module AboutPage
     def to_h
       fedora_info
     end
-
   end
 end

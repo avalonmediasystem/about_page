@@ -25,7 +25,7 @@ describe "the about page", :type => :feature do
     end
 
     it "should contain a list of dependencies" do
-      page.should have_content "about_page"
+      expect(page).to have_content "about_page"
     end
   end
 
@@ -35,7 +35,7 @@ describe "the about page", :type => :feature do
     end
 
     it "should contain a list of environment variables" do
-      page.should have_content "GEM_HOME"
+      expect(page).to have_content "GEM_HOME"
     end
   end
 
@@ -45,8 +45,8 @@ describe "the about page", :type => :feature do
     end
     
     it "should" do
-      page.response_headers['Content-Type'].should =~ /xml/
-      page.body.should_not be_empty
+      expect(page.response_headers['Content-Type']).to match(/xml/)
+      expect(page.body).to_not be_empty
     end
   end
 
@@ -56,8 +56,8 @@ describe "the about page", :type => :feature do
     end
     
     it "should" do
-      page.response_headers['Content-Type'].should =~ /json/
-      page.body.should_not be_empty
+      expect(page.response_headers['Content-Type']).to match(/json/)
+      expect(page.body).to_not be_empty
     end
   end
 
@@ -67,8 +67,8 @@ describe "the about page", :type => :feature do
     end
 
     it "should" do
-      page.response_headers['Content-Type'].should =~ /yaml/
-      page.body.should_not be_empty
+      expect(page.response_headers['Content-Type']).to match(/yaml/)
+      expect(page.body).to_not be_empty
     end
   end
 end
